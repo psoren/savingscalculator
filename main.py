@@ -4,6 +4,9 @@ import locale
 # Set locale to use commas as thousands separators
 locale.setlocale(locale.LC_ALL, '')
 
+MAX_AGE = 35
+
+
 def format_currency(amount):
     # Format the amount with dollar sign, commas, and no cents
     return "${:,.0f}".format(amount)
@@ -17,12 +20,22 @@ def parse_money_input(input_str):
     except ValueError:
         raise ValueError("Invalid input. Please enter a valid number.")
 
-def get_user_input(prompt):
+def parse_birthday_input(input_str):
+    # Try parsing the date using both the month abbreviation and full month name
+    try:
+        return datetime.strptime(input_str, '%b %d %Y')
+    except ValueError:
+        try:
+            return datetime.strptime(input_str, '%B %d %Y')
+        except ValueError:
+            raise ValueError("Invalid date format. Please enter a date in the format 'Dec 1 1990' or 'December 1 1990'.")
+
+def get_user_input(prompt, parser_func):
     while True:
         user_input = input(prompt)
 
         try:
-            return parse_money_input(user_input)
+            return parser_func(user_input)
         except ValueError as e:
             print(e)
 
@@ -33,6 +46,9 @@ def calculate_investment(starting_amount, ending_amount, monthly_savings, annual
     investment_value = starting_amount
 
     # Convert the birthday to a datetime object
+    if not isinstance(birthday, str):
+        birthday = birthday.strftime('%b %d %Y')
+
     birthday = datetime.strptime(birthday, '%b %d %Y')
 
     while investment_value < ending_amount:
@@ -45,6 +61,9 @@ def calculate_investment(starting_amount, ending_amount, monthly_savings, annual
 
         # Calculate age based on the current date and birthday
         age = current_date.year - birthday.year - ((current_date.month, current_date.day) < (birthday.month, birthday.day))
+        if age >= MAX_AGE:
+            print(f"Nice try, you're already {MAX_AGE}, you'll never get a house.")
+            break
 
         # Format the date as Month Year
         month_year = current_date.strftime("%B %Y")
@@ -55,19 +74,19 @@ def calculate_investment(starting_amount, ending_amount, monthly_savings, annual
     return current_date
 
 if __name__ == "__main__":
-    birthday = input("Enter your birthday (e.g., Dec 1 1990): ")
-    starting_amount = get_user_input("Enter your initial savings amount: ")
-    annual_rate_of_return = get_user_input("Enter the annual rate of return on investment (as a decimal): ")
-    monthly_savings = get_user_input("Enter your current savings amount per month: ")
+    birthday = get_user_input("Enter your birthday (e.g., Dec 1 1990): ", parse_birthday_input)
+    starting_amount = get_user_input("Enter your initial savings amount: ", parse_money_input)
+    annual_rate_of_return = get_user_input("Enter the annual rate of return on investment (as a decimal): ", parse_money_input)
+    monthly_savings = get_user_input("Enter your current savings amount per month: ", parse_money_input)
 
     new_job_response = input("Do you have a new job where you can save more per month? (yes or no): ")
     if new_job_response.lower() == 'yes':
         new_job_month = input("Enter the month and year when the new job starts (e.g., July 2022): ")
-        new_job_savings = get_user_input("Enter the new savings amount per month: ")
+        new_job_savings = get_user_input("Enter the new savings amount per month: ", parse_money_input)
     else:
         new_job_month, new_job_savings = None, None
 
-    house_saving_goal = get_user_input("Enter the amount you want to save for the house: ")
+    house_saving_goal = get_user_input("Enter the amount you want to save for the house: ", parse_money_input)
 
     final_date_reached = calculate_investment(starting_amount, house_saving_goal, monthly_savings, annual_rate_of_return,
                                               birthday, new_job_month, new_job_savings)
