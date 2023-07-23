@@ -6,6 +6,12 @@ locale.setlocale(locale.LC_ALL, '')
 
 MAX_AGE = 35
 
+def print_welcome_message():
+    # Fancy ASCII art for user interaction
+    print("╔════════════════════════════════════════════════╗")
+    print("║   🏠 Welcome to House Savings Calculator! 🏠   ║")
+    print("╚════════════════════════════════════════════════╝")
+
 
 def format_currency(amount):
     # Format the amount with dollar sign, commas, and no cents
@@ -32,7 +38,7 @@ def parse_birthday_input(input_str):
 
 def get_user_input(prompt, parser_func):
     while True:
-        user_input = input(prompt)
+        user_input = input(f"👉 {prompt}: ")
 
         try:
             return parser_func(user_input)
@@ -51,6 +57,8 @@ def calculate_investment(starting_amount, ending_amount, monthly_savings, annual
 
     birthday = datetime.strptime(birthday, '%b %d %Y')
 
+    print("\n📅 Starting your house savings journey... 🚀\n")
+
     while investment_value < ending_amount:
         if new_job_month and current_date >= datetime.strptime(new_job_month, '%b %Y'):
             monthly_savings = new_job_savings
@@ -62,18 +70,26 @@ def calculate_investment(starting_amount, ending_amount, monthly_savings, annual
         # Calculate age based on the current date and birthday
         age = current_date.year - birthday.year - ((current_date.month, current_date.day) < (birthday.month, birthday.day))
         if age >= MAX_AGE:
-            print(f"Nice try, you're already {MAX_AGE}, you'll never get a house.")
+            print("\n🎉 Congratulations! 🎉")
+            print(f"You've reached the maximum age of {MAX_AGE} years. You'll never get a house at this rate.\n")
             break
 
         # Format the date as Month Year
         month_year = current_date.strftime("%B %Y")
         formatted_value = format_currency(investment_value)
         amount_saved = format_currency(monthly_savings)
-        print(f"{month_year}: {formatted_value} (Age: {age}, Amount Saved: {amount_saved})")
+
+        # Fancy ASCII art for amount saved per month
+        print(f"📅 {month_year}: {formatted_value} (Age: {age}, Amount Saved: {amount_saved})")
+        print("   ┏━━━━━━━━━┓")
+        print("   ┃  💰 💰  ┃")
+        print("   ┃  💰 💰  ┃")
+        print("   ┗━━━━━━━━━┛\n")
 
     return current_date
 
 if __name__ == "__main__":
+    print_welcome_message()
     birthday = get_user_input("Enter your birthday (e.g., Dec 1 1990): ", parse_birthday_input)
     starting_amount = get_user_input("Enter your initial savings amount: ", parse_money_input)
     annual_rate_of_return = get_user_input("Enter the annual rate of return on investment (as a decimal): ", parse_money_input)
